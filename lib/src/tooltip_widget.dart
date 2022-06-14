@@ -100,6 +100,10 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
   }
 
   double _getTooltipWidth() {
+    if(widget.container != null){
+
+      return widget.contentWidth ?? 280;
+    }
     final titleStyle = widget.titleTextStyle ??
         Theme.of(context)
             .textTheme
@@ -356,6 +360,87 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
         ),
       );
     } else {
+      if(widget.showArrow){
+        return Positioned(
+          top: contentY,
+          left: _getLeft(),
+          right: _getRight(),
+          child: FractionalTranslation(
+            translation: Offset(0.0, contentFractionalOffset as double),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset(0.0, contentFractionalOffset / 10),
+                end: Offset(0.0, 0.100),
+              ).animate(_curvedAnimation),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: widget.showArrow
+                      ? EdgeInsets.only(
+                    top: paddingTop - (isArrowUp ? arrowHeight : 0),
+                    bottom: paddingBottom - (isArrowUp ? 0 : arrowHeight),
+                  )
+                      : null,
+                  child: Stack(
+                    alignment: isArrowUp
+                        ? Alignment.topLeft
+                        : _getLeft() == null
+                        ? Alignment.bottomRight
+                        : Alignment.bottomLeft,
+                    children: [
+                      if (widget.showArrow)
+                        Positioned(
+                          left: _getLeft() == null
+                              ? null
+                              : (widget.position!.getCenter() -
+                              (arrowWidth / 2) -
+                              (_getLeft() ?? 0)),
+                          right: _getLeft() == null
+                              ? (MediaQuery.of(context).size.width -
+                              widget.position!.getCenter()) -
+                              (_getRight() ?? 0) -
+                              (arrowWidth / 2)
+                              : null,
+                          child: CustomPaint(
+                            painter: _Arrow(
+                              strokeColor: widget.tooltipColor!,
+                              strokeWidth: 10,
+                              paintingStyle: PaintingStyle.fill,
+                              isUpArrow: isArrowUp,
+                            ),
+                            child: SizedBox(
+                              height: arrowHeight,
+                              width: arrowWidth,
+                            ),
+                          ),
+                        ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: isArrowUp ? arrowHeight - 1 : 0,
+                          bottom: isArrowUp ? 0 : arrowHeight - 1,
+                        ),
+                        child:  Center(
+                          child: MeasureSize(
+                              onSizeChange: (size) {
+                                setState(() {
+                                  var tempPos = position;
+                                  tempPos = Offset(
+                                      position!.dx, position!.dy + size!.height);
+                                  position = tempPos;
+                                });
+                              },
+                              child: widget.container),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
       return Stack(
         children: <Widget>[
           Positioned(
@@ -399,6 +484,8 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
           ),
         ],
       );
+
+
     }
   }
 
